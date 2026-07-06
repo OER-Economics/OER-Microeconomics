@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profit-Max vs. Win-Max — Buying Wins</title>
+<style>
+  :root{
+    --acc:#059669; --acc-d:#047857; --acc-t:#ECFDF5; --acc-t2:#D1FAE5;
+    --ink:#0F172A; --body:#334155; --slate:#64748B; --mut:#94A3B8;
+    --paper:#F5F7FB; --card:#FFFFFF; --line:#E5E9F0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 20px 60px;}
+  .hero{background:linear-gradient(135deg,var(--acc),var(--acc-d));color:#fff;border-radius:20px;
+    padding:30px 32px;position:relative;overflow:hidden;}
+  .hero:after{content:"★";position:absolute;right:20px;top:-8px;font-size:120px;opacity:.13;}
+  .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#CFF5E6;font-weight:700;}
+  .hero h1{font-size:30px;line-height:1.15;margin:8px 0 12px;font-weight:800;}
+  .hero p{font-size:16px;max-width:660px;color:#EAFBF3;}
+  .prompt{background:var(--card);border-radius:16px;padding:20px 24px;margin-top:20px;
+    border-left:5px solid var(--acc);box-shadow:0 2px 14px rgba(15,23,42,.05);font-size:15px;}
+  .prompt b{color:var(--ink);}
+  .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;margin-top:20px;}
+  @media(max-width:760px){.grid{grid-template-columns:1fr;}}
+  .card{background:var(--card);border-radius:16px;padding:22px 24px;border:1px solid var(--line);}
+  .card h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#7A88A0;margin-bottom:14px;font-weight:700;}
+  svg{width:100%;height:auto;display:block;}
+  .ctl{margin:8px 0 4px;}
+  .ctl label{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:6px;}
+  input[type=range]{width:100%;-webkit-appearance:none;height:8px;border-radius:8px;background:var(--line);}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;
+    background:#fff;border:4px solid var(--acc);cursor:pointer;box-shadow:0 2px 8px rgba(15,23,42,.25);}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:4px solid var(--acc);cursor:pointer;}
+  .rangelabels{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-top:2px;}
+  .stats{display:flex;gap:10px;margin-top:12px;}
+  .stat{flex:1;background:var(--paper);border-radius:12px;padding:10px 6px;text-align:center;}
+  .stat .big{font-size:21px;font-weight:800;line-height:1;}
+  .stat .lab{font-size:9.5px;color:var(--slate);text-transform:uppercase;letter-spacing:.03em;margin-top:4px;font-weight:700;}
+  .toggle{display:flex;gap:8px;margin-top:14px;}
+  .tg{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:9px;font-size:12.5px;
+    font-weight:700;cursor:pointer;color:var(--slate);text-align:center;transition:.15s;}
+  .tg.on{border-color:var(--acc);background:var(--acc);color:#fff;}
+  .callout{margin-top:14px;padding:14px 16px;border-radius:12px;background:var(--acc-t);font-size:13.5px;min-height:78px;}
+  .callout b{color:var(--acc-d);}
+  .btns{display:flex;gap:8px;margin-top:14px;}
+  .btn{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:8px;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--ink);transition:.15s;}
+  .btn:hover{border-color:var(--acc);background:var(--acc);color:#fff;}
+  .foot{font-size:12px;color:var(--mut);margin-top:18px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="kicker">ECON 3580 · Leagues & Franchises</div>
+    <h1>Buying Wins: Two Owners, Two Stopping Points</h1>
+    <p>A team can buy wins — but each win costs more and earns less than the last. Drag how many wins the owner buys and watch where a <b>profit maximizer</b> and a <b>win maximizer</b> choose to stop.</p>
+  </div>
+  <div class="prompt"><b>Try it:</b> slide up to the <b>profit-max</b> point (widest TR–TC gap), then keep going to the <b>win-max</b> point (where TR meets TC and profit hits zero). Switch markets to see the big-market team buy more of everything.</div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Revenue, cost & profit from wins</h3>
+      <svg id="plot" viewBox="0 0 520 360" role="img" aria-label="TR TC profit chart"></svg>
+    </div>
+    <div class="card">
+      <h3>The Owner's Dial</h3>
+      <div class="ctl">
+        <label><span>Wins purchased (w)</span><span id="wv" style="color:var(--acc)">40</span></label>
+        <input type="range" id="w" min="0" max="100" value="40" step="1">
+        <div class="rangelabels"><span>bare squad</span><span>title chase</span></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="big" id="trv" style="color:var(--acc)">–</div><div class="lab">Revenue</div></div>
+        <div class="stat"><div class="big" id="tcv" style="color:var(--ink)">–</div><div class="lab">Cost</div></div>
+        <div class="stat"><div class="big" id="pfv" style="color:var(--acc-d)">–</div><div class="lab">Profit</div></div>
+      </div>
+      <div class="toggle" id="mkt">
+        <div class="tg on" data-m="big">Big market<small></small></div>
+        <div class="tg" data-m="small">Small market</div>
+      </div>
+      <div class="btns" id="jump">
+        <button class="btn" data-j="p">Jump to profit-max</button>
+        <button class="btn" data-j="w">Jump to win-max</button>
+      </div>
+      <div class="callout" id="callout"></div>
+    </div>
+  </div>
+  <div class="foot">TR(w) rises at a diminishing rate; TC(w) rises at an increasing rate. Profit-max is the widest gap (MR = MC); win-max is where TR = TC.</div>
+</div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+const L=58,R=502,T=18,B=312;
+let w=40, market="big";
+const CAP={big:92, small:62};
+function TR(x){ return CAP[market]*(1-Math.exp(-x/28)); }
+function TC(x){ return 5+0.009*x*x; }
+const YMAX=100;
+const PX=x=>L+(x/100)*(R-L);
+const PY=v=>B-(v/YMAX)*(B-T);
+const plot=document.getElementById('plot');
+function el(n,a){let e=document.createElementNS(NS,n);for(k in a)e.setAttribute(k,a[k]);plot.appendChild(e);return e;}
+function txt(x,y,s,o){let e=el('text',Object.assign({x,y,'font-size':13,fill:'#64748B','font-weight':700},o||{}));e.textContent=s;return e;}
+function path(pts,col,wid,dash){let d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  let a={d,fill:'none',stroke:col,'stroke-width':wid||3.4,'stroke-linejoin':'round','stroke-linecap':'round'};if(dash)a['stroke-dasharray']=dash;el('path',a);}
+function opt(){ // profit-max (max gap) & win-max (TR=TC)
+  let w1=0,g=-1,w2=0; for(let x=0;x<=100;x++){let d=TR(x)-TC(x); if(d>g){g=d;w1=x;} if(TR(x)>=TC(x))w2=x;} return {w1,w2};
+}
+function draw(){
+  plot.innerHTML='';
+  el('line',{x1:L,y1:B,x2:R,y2:B,stroke:'#0F172A','stroke-width':2});
+  el('line',{x1:L,y1:B,x2:L,y2:T,stroke:'#0F172A','stroke-width':2});
+  txt(R-2,B+22,'Wins (w)',{'text-anchor':'end'}); txt(L-8,T+2,'$',{'text-anchor':'end'});
+  let trp=[],tcp=[]; for(let x=0;x<=100;x++){trp.push([PX(x),PY(TR(x))]);tcp.push([PX(x),PY(TC(x))]);}
+  const {w1,w2}=opt();
+  // profit gap shading at current w (if positive)
+  if(TR(w)>TC(w)) el('line',{x1:PX(w),y1:PY(TR(w)),x2:PX(w),y2:PY(TC(w)),stroke:'#059669','stroke-width':9,opacity:.22,'stroke-linecap':'round'});
+  path(tcp,'#334155'); path(trp,'#059669');
+  txt(trp[100][0]-2,trp[100][1]-8,'TR',{fill:'#059669','text-anchor':'end','font-size':15});
+  txt(tcp[100][0]-2,tcp[100][1]-6,'TC',{fill:'#334155','text-anchor':'end','font-size':15});
+  // w1 & w2 guides
+  el('line',{x1:PX(w1),y1:PY(TR(w1)),x2:PX(w1),y2:B,stroke:'#CBD5E1','stroke-width':1.4,'stroke-dasharray':'4 4'});
+  el('line',{x1:PX(w2),y1:PY(TR(w2)),x2:PX(w2),y2:B,stroke:'#CBD5E1','stroke-width':1.4,'stroke-dasharray':'4 4'});
+  txt(PX(w1),B+20,'w₁',{'text-anchor':'middle',fill:'#0F172A','font-size':12});
+  txt(PX(w2),B+20,'w₂',{'text-anchor':'middle',fill:'#0F172A','font-size':12});
+  // current-w marker
+  el('line',{x1:PX(w),y1:B,x2:PX(w),y2:T+4,stroke:'#059669','stroke-width':1.6,'stroke-dasharray':'2 3',opacity:.7});
+  el('circle',{cx:PX(w),cy:PY(TR(w)),r:6,fill:'#059669',stroke:'#fff','stroke-width':2});
+  el('circle',{cx:PX(w),cy:PY(TC(w)),r:6,fill:'#334155',stroke:'#fff','stroke-width':2});
+  // readouts
+  document.getElementById('wv').textContent=w;
+  document.getElementById('trv').textContent='$'+TR(w).toFixed(0);
+  document.getElementById('tcv').textContent='$'+TC(w).toFixed(0);
+  let pf=TR(w)-TC(w);
+  let pe=document.getElementById('pfv'); pe.textContent=(pf<0?'−$':'$')+Math.abs(pf).toFixed(0); pe.style.color=pf<0?'#B91C1C':'#047857';
+  document.getElementById('w').style.background=`linear-gradient(90deg,var(--acc) ${w}%,var(--line) ${w}%)`;
+  say(w1,w2,pf);
+  window.__w1=w1; window.__w2=w2;
+}
+function say(w1,w2,pf){
+  let c=document.getElementById('callout');
+  if(w<w1-1){ c.innerHTML=`<b>Below the profit-max point.</b> Each extra win still earns more than it costs (MR &gt; MC) — both owners keep buying. Profit is rising.`; }
+  else if(Math.abs(w-w1)<=1){ c.innerHTML=`<b>Profit-max (w₁ = ${w1}).</b> The TR–TC gap is at its widest — MR = MC. A <b>profit maximizer stops here</b>. Profit is as high as it gets.`; }
+  else if(w<w2-1){ c.innerHTML=`<b>Past profit-max, before break-even.</b> Extra wins still add revenue but cost more than they bring in — profit is shrinking. A profit maximizer wouldn't be here; a <b>win maximizer still is</b>.`; }
+  else if(Math.abs(w-w2)<=1){ c.innerHTML=`<b>Win-max (w₂ = ${w2}).</b> TR = TC, so profit = 0. The <b>win maximizer stops here</b> — every dollar of revenue spent chasing wins. w₂ &gt; w₁, so they field the stronger team.`; }
+  else { c.innerHTML=`<b>Beyond break-even.</b> TC &gt; TR — the team is now losing money on wins. Only an owner subsidising the club (or a national team at the World Cup) would push this far.`; }
+}
+document.getElementById('w').addEventListener('input',e=>{w=+e.target.value;draw();});
+document.querySelectorAll('#mkt .tg').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('#mkt .tg').forEach(x=>x.classList.remove('on'));t.classList.add('on');market=t.dataset.m;draw();}));
+document.querySelectorAll('#jump .btn').forEach(b=>b.addEventListener('click',()=>{
+  w=b.dataset.j==='p'?window.__w1:window.__w2; document.getElementById('w').value=w; draw();}));
+draw();
+</script>
+</body>
+</html>
