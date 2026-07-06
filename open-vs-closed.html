@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Open vs. Closed — Promotion & Relegation</title>
+<style>
+  :root{
+    --acc:#059669; --acc-d:#047857; --acc-t:#ECFDF5;
+    --ink:#0F172A; --body:#334155; --slate:#64748B; --mut:#94A3B8;
+    --paper:#F5F7FB; --card:#FFFFFF; --line:#E5E9F0; --up:#059669; --down:#B91C1C;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 20px 60px;}
+  .hero{background:linear-gradient(135deg,var(--acc),var(--acc-d));color:#fff;border-radius:20px;padding:30px 32px;position:relative;overflow:hidden;}
+  .hero:after{content:"⇅";position:absolute;right:24px;top:-14px;font-size:130px;opacity:.13;font-weight:800;}
+  .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#CFF5E6;font-weight:700;}
+  .hero h1{font-size:30px;line-height:1.15;margin:8px 0 12px;font-weight:800;}
+  .hero p{font-size:16px;max-width:660px;color:#EAFBF3;}
+  .prompt{background:var(--card);border-radius:16px;padding:20px 24px;margin-top:20px;border-left:5px solid var(--acc);box-shadow:0 2px 14px rgba(15,23,42,.05);font-size:15px;}
+  .prompt b{color:var(--ink);}
+  .grid{display:grid;grid-template-columns:1fr .8fr;gap:18px;margin-top:20px;}
+  @media(max-width:760px){.grid{grid-template-columns:1fr;}}
+  .card{background:var(--card);border-radius:16px;padding:20px 22px;border:1px solid var(--line);}
+  .card h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#7A88A0;margin-bottom:6px;font-weight:700;}
+  .divname{font-size:12px;font-weight:800;color:var(--acc-d);margin:12px 0 6px;text-transform:uppercase;letter-spacing:.05em;}
+  table{width:100%;border-collapse:collapse;}
+  td,th{padding:7px 8px;text-align:left;font-size:13.5px;}
+  th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--slate);border-bottom:2px solid var(--line);}
+  tbody tr{border-bottom:1px solid var(--line);}
+  td.pos{color:var(--mut);font-weight:800;width:26px;}
+  td.pts{text-align:right;font-weight:800;color:var(--ink);width:44px;}
+  .tag{font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:10px;margin-left:6px;}
+  .tag.up{background:#DCFCE7;color:var(--acc-d);} .tag.down{background:#FEE2E2;color:var(--down);}
+  .tag.champ{background:#FEF3C7;color:#92400E;} .tag.new{background:#E0F2FE;color:#075985;}
+  .toggle{display:flex;gap:8px;margin-bottom:14px;}
+  .tg{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;color:var(--slate);text-align:center;transition:.15s;}
+  .tg.on{border-color:var(--acc);background:var(--acc);color:#fff;}
+  .btns{display:flex;gap:8px;margin:6px 0 12px;}
+  .btn{flex:1;border:none;border-radius:12px;padding:11px;font-size:13.5px;font-weight:800;cursor:pointer;transition:.15s;}
+  .btn.play{background:var(--acc);color:#fff;} .btn.play:hover{background:var(--acc-d);}
+  .btn.reset{background:#fff;border:1.5px solid var(--line);color:var(--ink);}
+  .season{font-size:13px;color:var(--slate);margin-bottom:10px;font-weight:700;}
+  .callout{margin-top:6px;padding:14px 16px;border-radius:12px;background:var(--acc-t);font-size:13.5px;min-height:96px;}
+  .callout b{color:var(--acc-d);}
+  .foot{font-size:12px;color:var(--mut);margin-top:18px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="kicker">ECON 3580 · Leagues & Franchises</div>
+    <h1>Open vs. Closed: Play a Season</h1>
+    <p>In a <b>closed</b> league the same teams return every year. In an <b>open</b> league the bottom clubs drop out and hungry challengers rise up. Run a few seasons and watch how differently membership behaves.</p>
+  </div>
+  <div class="prompt"><b>Try it:</b> pick a structure, then hit <b>Play season</b> a few times. In closed mode the table's cast never changes. In open mode, finish last and you're gone — replaced by a promoted club. That churn is the heart of the European model.</div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="toggle" id="mode">
+        <div class="tg on" data-m="closed">🔒 Closed league</div>
+        <div class="tg" data-m="open">🔁 Open league</div>
+      </div>
+      <div class="season" id="season">Season 1 · preseason</div>
+      <div class="btns">
+        <button class="btn play" id="play">▶ Play season</button>
+        <button class="btn reset" id="reset">↺ Reset</button>
+      </div>
+      <div class="divname">Top division</div>
+      <table><thead><tr><th>#</th><th>Club</th><th style="text-align:right">Pts</th></tr></thead><tbody id="top"></tbody></table>
+      <div class="divname" id="lowerhead" style="display:none">Waiting below (challengers)</div>
+      <table><tbody id="lower"></tbody></table>
+    </div>
+    <div class="card">
+      <h3>What just happened</h3>
+      <div class="callout" id="callout">Pick a structure and play a season to begin.</div>
+      <h3 style="margin-top:16px">Membership churn</h3>
+      <div id="churn" style="font-size:13px;color:var(--body);"></div>
+    </div>
+  </div>
+  <div class="foot">A simplified 6-club top flight. Points are random each season; open mode relegates the bottom club and promotes a challenger. Closed mode keeps the same six forever.</div>
+</div>
+
+<script>
+const TOP0=["Athletic","Rovers","City","United","Albion","County"];
+const POOL0=["Wanderers","Town","Rangers","Vale","Orient","Argyle"];
+let mode="closed", season=0, topDiv=[], pool=[], everTop=new Set(), relegations=0, promotions=0;
+function reset(){
+  mode=document.querySelector('#mode .tg.on').dataset.m;
+  season=0; topDiv=TOP0.map(n=>({n,p:0,tag:''})); pool=POOL0.slice();
+  everTop=new Set(TOP0); relegations=0; promotions=0;
+  document.getElementById('season').textContent="Season 1 · preseason";
+  document.getElementById('callout').innerHTML="Pick a structure and play a season to begin.";
+  document.getElementById('churn').innerHTML="";
+  render(false);
+}
+function play(){
+  season++;
+  // random points
+  topDiv.forEach(t=>{t.p=Math.floor(30+Math.random()*60); t.tag='';});
+  topDiv.sort((a,b)=>b.p-a.p);
+  topDiv[0].tag='champ';
+  let msg='';
+  if(mode==='open'){
+    let releg=topDiv[topDiv.length-1];
+    releg.tag='down';
+    // promote a challenger from pool
+    let idx=Math.floor(Math.random()*pool.length);
+    let promoted=pool[idx];
+    render(true); // show tags before swap
+    // perform swap
+    setTimeout(()=>{
+      pool[idx]=releg.n;                 // relegated club goes to pool
+      topDiv[topDiv.length-1]={n:promoted,p:0,tag:'new'};
+      if(!everTop.has(promoted)){promotions++;}
+      everTop.add(promoted); relegations++;
+      msg=`<b>${releg.n} finished last and were relegated.</b> <b>${promoted}</b> come up to replace them. In an open league, a bad season costs you your place — that's the pressure that pushes owners to win-maximize.`;
+      document.getElementById('callout').innerHTML=msg;
+      updChurn();
+      render(false);
+    },650);
+    document.getElementById('season').textContent=`Season ${season} · results in`;
+    return;
+  } else {
+    msg=`<b>${topDiv[0].n} won the title.</b> ${topDiv[topDiv.length-1].n} finished last — but in a closed league, nothing happens to them. Same six clubs line up again next season. A weak team is safe, so cutting costs can be a viable path to profit.`;
+    document.getElementById('callout').innerHTML=msg;
+    updChurn();
+  }
+  document.getElementById('season').textContent=`Season ${season} · final table`;
+  render(false);
+}
+function updChurn(){
+  let uniq=everTop.size;
+  document.getElementById('churn').innerHTML =
+    mode==='open'
+    ? `Seasons played: <b>${season}</b><br>Relegations: <b>${relegations}</b><br>Different clubs to reach the top flight: <b>${uniq}</b>`
+    : `Seasons played: <b>${season}</b><br>Relegations: <b>0</b><br>Different clubs to reach the top flight: <b>6</b> (unchanged)`;
+}
+function render(showLower){
+  const tb=document.getElementById('top'); tb.innerHTML='';
+  topDiv.forEach((t,i)=>{
+    let tag = t.tag==='champ'?'<span class="tag champ">CHAMPIONS</span>'
+            : t.tag==='down'?'<span class="tag down">RELEGATED ▼</span>'
+            : t.tag==='new'?'<span class="tag new">PROMOTED ▲</span>':'';
+    tb.innerHTML+=`<tr><td class="pos">${i+1}</td><td>${t.n}${tag}</td><td class="pts">${t.p||'–'}</td></tr>`;
+  });
+  const lh=document.getElementById('lowerhead'), lw=document.getElementById('lower'); lw.innerHTML='';
+  if(mode==='open'){ lh.style.display='block';
+    pool.slice(0,4).forEach(n=>{ lw.innerHTML+=`<tr><td class="pos">•</td><td style="color:var(--slate)">${n}</td><td></td></tr>`; });
+  } else lh.style.display='none';
+}
+document.querySelectorAll('#mode .tg').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('#mode .tg').forEach(x=>x.classList.remove('on'));t.classList.add('on');reset();}));
+document.getElementById('play').addEventListener('click',play);
+document.getElementById('reset').addEventListener('click',reset);
+reset();
+</script>
+</body>
+</html>
